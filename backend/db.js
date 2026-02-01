@@ -1,0 +1,33 @@
+const path = require("path");
+const Database = require("better-sqlite3");
+
+const dbPath = path.join(__dirname, "app.db");
+const db = new Database(dbPath);
+
+// Create users table
+db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY,
+    email TEXT NOT NULL UNIQUE,
+    passwordHash TEXT NOT NULL,
+    createdAt TEXT NOT NULL
+  );
+`);
+
+// Create posts table (linked to users)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS posts (
+    id INTEGER PRIMARY KEY,
+    userId INTEGER NOT NULL,
+    productName TEXT NOT NULL,
+    imageUrl TEXT NOT NULL,
+    caption TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    createdAt TEXT NOT NULL,
+    FOREIGN KEY (userId) REFERENCES users(id)
+  );
+`);
+
+module.exports = db;
+
+

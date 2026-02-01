@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Instacatalog • Dashboard</title>
+
+  <style>
+    :root{
+      --bg1:#070A12;
+      --bg2:#0B1220;
+      --card: rgba(255,255,255,.06);
+      --stroke: rgba(255,255,255,.14);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.68);
+      --shadow: 0 20px 70px rgba(0,0,0,.55);
+      --r: 18px;
+      --glow: 0 0 0 1px rgba(0,229,255,.22), 0 18px 60px rgba(0,229,255,.10);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color: var(--text);
+      background: radial-gradient(1200px 800px at 20% 10%, #2A1BFF33, transparent 60%),
+                  radial-gradient(1000px 700px at 80% 20%, #00E5FF22, transparent 55%),
+                  radial-gradient(900px 700px at 50% 90%, #FF2BD622, transparent 60%),
+                  linear-gradient(180deg, var(--bg1), var(--bg2));
+    }
+    .grid{
+      position:fixed; inset:-2px;
+      background:
+        linear-gradient(to right, rgba(255,255,255,.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,.05) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(circle at 50% 30%, rgba(0,0,0,.9), transparent 65%);
+      opacity:.30;
+      pointer-events:none;
+      animation: drift 14s linear infinite;
+    }
+    @keyframes drift{ from{transform:translate3d(0,0,0)} to{transform:translate3d(30px,18px,0)} }
+
+    .wrap{ padding: 24px 16px 40px; max-width: 1100px; margin: 0 auto; }
+
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px; flex-wrap:wrap;
+      margin-bottom: 16px;
+    }
+    .brand{ display:flex; align-items:center; gap:10px; }
+    .logo{
+      width:34px;height:34px;border-radius:12px;
+      background: conic-gradient(from 200deg, #00E5FF, #2A1BFF, #FF2BD6, #00E5FF);
+      box-shadow: 0 10px 30px rgba(0,229,255,.15);
+    }
+    .title{ font-weight:900; letter-spacing:.4px; }
+    .sub{ font-size:12px; color: var(--muted); margin-top:2px; }
+
+    .actions{ display:flex; gap:10px; flex-wrap:wrap; }
+    .link{
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      color: var(--text);
+      text-decoration:none;
+      font-weight: 700;
+      transition: transform .1s ease, background .18s ease, border-color .18s ease, opacity .18s ease;
+      cursor:pointer;
+    }
+    .link:hover{ background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.20); }
+    .link:active{ transform: translateY(1px) scale(.99); }
+
+    .summary{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 14px 0 16px;
+    }
+    @media (max-width: 900px){ .summary{ grid-template-columns: repeat(2, 1fr);} }
+
+    .card{
+      background: linear-gradient(180deg, var(--card), rgba(255,255,255,.03));
+      border: 1px solid var(--stroke);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      padding: 14px;
+      position:relative;
+      overflow:hidden;
+    }
+    .card.glow{ box-shadow: var(--shadow), var(--glow); }
+
+    .metric{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .metric .k{ font-size:12px; color: var(--muted); }
+    .metric .v{ font-size:22px; font-weight:900; letter-spacing:.2px; }
+
+    .list{
+      display:grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 900px){ .list{ grid-template-columns: 1fr; } }
+
+    .post h3{
+      margin: 0 0 6px;
+      font-size: 16px;
+      letter-spacing:.2px;
+    }
+    .meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+      margin: 10px 0;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      font-size: 12px;
+      color: rgba(255,255,255,.85);
+      width: fit-content;
+    }
+
+    img{
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      margin-top: 10px;
+      display:block;
+    }
+
+    .btnrow{ display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px; }
+    .btn{
+      flex: 1;
+      min-width: 130px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      cursor:pointer;
+      font-weight: 800;
+      letter-spacing:.2px;
+      transition: transform .1s ease, background .18s ease, border-color .18s ease, opacity .18s ease;
+    }
+    .btn:hover{ background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.20); }
+    .btn:active{ transform: translateY(1px) scale(.99); }
+    .btn.primary{
+      border-color: rgba(0,229,255,.28);
+      background: linear-gradient(90deg, rgba(0,229,255,.22), rgba(42,27,255,.18));
+    }
+    .btn.primary:hover{
+      border-color: rgba(0,229,255,.45);
+      background: linear-gradient(90deg, rgba(0,229,255,.30), rgba(42,27,255,.22));
+    }
+    .btn.danger{
+      border-color: rgba(255,43,214,.25);
+      background: linear-gradient(90deg, rgba(255,43,214,.16), rgba(255,255,255,.05));
+    }
+
+    .toast{
+      margin-top: 14px;
+      font-size: 12px;
+      color: rgba(255,255,255,.85);
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      padding: 10px 12px;
+      border-radius: 14px;
+      display:none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="grid"></div>
+
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <div class="title">Instacatalog Dashboard</div>
+          <div class="sub">Approve → Publish (simulated) • per-user workspace</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <a class="link" href="index.html">Submit</a>
+        <span class="link" onclick="loadPosts()">Refresh</span>
+        <span class="link" onclick="logout()">Logout</span>
+      </div>
+    </div>
+
+    <div class="summary">
+      <div class="card glow"><div class="metric"><div class="k">Total</div><div class="v" id="mTotal">0</div></div></div>
+      <div class="card"><div class="metric"><div class="k">Pending</div><div class="v" id="mPending">0</div></div></div>
+      <div class="card"><div class="metric"><div class="k">Approved</div><div class="v" id="mApproved">0</div></div></div>
+      <div class="card"><div class="metric"><div class="k">Posted</div><div class="v" id="mPosted">0</div></div></div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+    <div class="list" id="posts"></div>
+  </div>
+
+<script>
+  const API_BASE = "http://localhost:3000";
+  const TOKEN = localStorage.getItem("token");
+
+  if (!TOKEN) {
+    alert("Please login first");
+    window.location.href = "login.html";
+  }
+
+  function logout() {
+    localStorage.removeItem("token");
+    window.location.href = "login.html";
+  }
+
+  const toastEl = document.getElementById("toast");
+  function toast(msg){
+    toastEl.style.display = "block";
+    toastEl.textContent = msg;
+    clearTimeout(window.__t);
+    window.__t = setTimeout(()=> toastEl.style.display = "none", 2200);
+  }
+
+  function escapeHtml(str) {
+    return String(str ?? "").replace(/[&<>"']/g, s => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
+    }[s]));
+  }
+
+  function setMetrics(posts){
+    const total = posts.length;
+    const pending = posts.filter(p => p.status === "pending").length;
+    const approved = posts.filter(p => p.status === "approved").length;
+    const posted = posts.filter(p => p.status === "posted").length;
+
+    document.getElementById("mTotal").textContent = total;
+    document.getElementById("mPending").textContent = pending;
+    document.getElementById("mApproved").textContent = approved;
+    document.getElementById("mPosted").textContent = posted;
+  }
+
+  function loadPosts() {
+    fetch(`${API_BASE}/posts`, { headers: { token: TOKEN } })
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById("posts");
+        container.innerHTML = "";
+
+        if (!Array.isArray(data)) {
+          toast(data.error || "Failed to load posts");
+          return;
+        }
+
+        setMetrics(data);
+
+        if (data.length === 0) {
+          container.innerHTML = `
+            <div class="card" style="grid-column:1/-1;">
+              No posts yet. Go to <b>Submit</b> and add one.
+            </div>
+          `;
+          return;
+        }
+
+        data.forEach(post => {
+          const div = document.createElement("div");
+          div.className = "card post";
+
+          const statusBadge = `<span class="badge">Status: <b>${escapeHtml(post.status)}</b></span>`;
+          const idBadge = `<span class="badge">ID: ${post.id}</span>`;
+
+          div.innerHTML = `
+            <h3>${escapeHtml(post.productName)}</h3>
+            <div class="meta">${statusBadge}${idBadge}</div>
+            <div style="color:rgba(255,255,255,.78); font-size:13px; line-height:1.45; white-space:pre-wrap;">
+              ${escapeHtml(post.caption)}
+            </div>
+            <img src="${escapeHtml(post.imageUrl)}" alt="product image">
+            <div class="btnrow">
+              <button class="btn primary" onclick="updateStatus(${post.id}, 'approved')">Approve</button>
+              <button class="btn danger" onclick="updateStatus(${post.id}, 'rejected')">Reject</button>
+              <button class="btn" onclick="publishPost(${post.id})">Post</button>
+            </div>
+          `;
+
+          container.appendChild(div);
+        });
+      })
+      .catch(err => {
+        console.error(err);
+        toast("Error loading posts. Check console.");
+      });
+  }
+
+  function updateStatus(id, status) {
+    fetch(`${API_BASE}/update-status`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "token": TOKEN
+      },
+      body: JSON.stringify({ id, status })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) {
+          toast(data.error || "Failed to update");
+          return;
+        }
+        toast(`✅ Updated: ${status}`);
+        loadPosts();
+      })
+      .catch(err => {
+        console.error(err);
+        toast("Error updating status. Check console.");
+      });
+  }
+
+  function publishPost(id) {
+    fetch(`${API_BASE}/publish`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "token": TOKEN
+      },
+      body: JSON.stringify({ id })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) {
+          toast(data.error || "Failed to publish");
+          return;
+        }
+        toast("📸 Posted (simulated)!");
+        loadPosts();
+      })
+      .catch(err => {
+        console.error(err);
+        toast("Error publishing. Check console.");
+      });
+  }
+
+  loadPosts();
+</script>
+</body>
+</html>

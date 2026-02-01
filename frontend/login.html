@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Instacatalog • Login</title>
+
+  <style>
+    :root{
+      --bg1:#070A12;
+      --bg2:#0B1220;
+      --card: rgba(255,255,255,.06);
+      --card2: rgba(255,255,255,.10);
+      --stroke: rgba(255,255,255,.14);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.68);
+      --shadow: 0 20px 70px rgba(0,0,0,.55);
+      --r: 18px;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color: var(--text);
+      background: radial-gradient(1200px 800px at 20% 10%, #2A1BFF33, transparent 60%),
+                  radial-gradient(1000px 700px at 80% 20%, #00E5FF22, transparent 55%),
+                  radial-gradient(900px 700px at 50% 90%, #FF2BD622, transparent 60%),
+                  linear-gradient(180deg, var(--bg1), var(--bg2));
+      overflow-x:hidden;
+    }
+
+    /* subtle animated grid */
+    .grid{
+      position:fixed; inset:-2px;
+      background:
+        linear-gradient(to right, rgba(255,255,255,.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,.05) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(circle at 50% 30%, rgba(0,0,0,.9), transparent 65%);
+      opacity:.35;
+      pointer-events:none;
+      animation: drift 14s linear infinite;
+    }
+    @keyframes drift{
+      from{transform:translate3d(0,0,0)}
+      to{transform:translate3d(30px,18px,0)}
+    }
+
+    .wrap{
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      padding: 28px 16px;
+    }
+
+    .card{
+      width:min(420px, 92vw);
+      background: linear-gradient(180deg, var(--card), rgba(255,255,255,.03));
+      border: 1px solid var(--stroke);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      padding: 22px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .card:before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background: radial-gradient(500px 250px at 15% 10%, #00E5FF30, transparent 60%),
+                  radial-gradient(450px 260px at 85% 20%, #2A1BFF30, transparent 60%),
+                  radial-gradient(450px 260px at 70% 90%, #FF2BD620, transparent 60%);
+      opacity:.8;
+      pointer-events:none;
+    }
+
+    .inner{ position:relative; }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-bottom: 10px;
+    }
+    .logo{
+      width:38px;height:38px;border-radius:12px;
+      background: conic-gradient(from 200deg, #00E5FF, #2A1BFF, #FF2BD6, #00E5FF);
+      box-shadow: 0 10px 30px rgba(0,229,255,.15);
+    }
+    .title{
+      font-weight:800;
+      letter-spacing:.4px;
+      font-size: 18px;
+      line-height:1.1;
+    }
+    .subtitle{
+      margin-top:2px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .heading{
+      margin: 14px 0 18px;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing:.2px;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin-bottom: 12px;
+    }
+    label{
+      font-size: 12px;
+      color: var(--muted);
+    }
+    input{
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(10,12,22,.55);
+      color: var(--text);
+      outline:none;
+      transition: transform .08s ease, border-color .18s ease, background .18s ease;
+    }
+    input:focus{
+      border-color: rgba(0,229,255,.55);
+      background: rgba(10,12,22,.75);
+    }
+
+    .row{
+      display:flex; gap:10px; margin-top: 10px;
+    }
+
+    .btn{
+      flex:1;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: 12px 12px;
+      border-radius: 14px;
+      cursor:pointer;
+      font-weight: 700;
+      transition: transform .10s ease, background .18s ease, border-color .18s ease, opacity .18s ease;
+    }
+    .btn:hover{ background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.20); }
+    .btn:active{ transform: translateY(1px) scale(.99); }
+
+    .btn.primary{
+      border-color: rgba(0,229,255,.28);
+      background: linear-gradient(90deg, rgba(0,229,255,.22), rgba(42,27,255,.18));
+    }
+    .btn.primary:hover{
+      border-color: rgba(0,229,255,.45);
+      background: linear-gradient(90deg, rgba(0,229,255,.30), rgba(42,27,255,.22));
+    }
+
+    .note{
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .toast{
+      margin-top: 12px;
+      font-size: 12px;
+      color: rgba(255,255,255,.85);
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      padding: 10px 12px;
+      border-radius: 14px;
+      display:none;
+    }
+
+    .spin{
+      width:14px;height:14px;
+      border-radius:50%;
+      border: 2px solid rgba(255,255,255,.25);
+      border-top-color: rgba(0,229,255,.9);
+      display:inline-block;
+      animation: spin .8s linear infinite;
+      vertical-align:-2px;
+      margin-right:8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+
+<body>
+  <div class="grid"></div>
+
+  <div class="wrap">
+    <div class="card">
+      <div class="inner">
+        <div class="brand">
+          <div class="logo"></div>
+          <div>
+            <div class="title">Instacatalog</div>
+            <div class="subtitle">Product → Approval → Publish pipeline</div>
+          </div>
+        </div>
+
+        <div class="heading">Login / Signup</div>
+
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" autocomplete="username" placeholder="you@example.com" />
+        </div>
+
+        <div class="field">
+          <label for="password">Password (min 6 chars)</label>
+          <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
+        </div>
+
+        <div class="row">
+          <button class="btn primary" id="loginBtn" onclick="login()">Login</button>
+          <button class="btn" id="signupBtn" onclick="signup()">Signup</button>
+        </div>
+
+        <div class="toast" id="toast"></div>
+        <div class="note">Tip: Signup once → then Login. Your session is stored in your browser.</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const API_BASE = "http://localhost:3000";
+  const toast = (msg) => {
+    const t = document.getElementById("toast");
+    t.style.display = "block";
+    t.textContent = msg;
+  };
+
+  function setLoading(btnId, loading, text) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.disabled = loading;
+    btn.innerHTML = loading ? `<span class="spin"></span>${text}` : text;
+    btn.style.opacity = loading ? "0.85" : "1";
+  }
+
+  function login() {
+    setLoading("loginBtn", true, "Logging in...");
+    fetch(`${API_BASE}/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.value, password: password.value })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+        toast("✅ Login successful. Redirecting…");
+        setTimeout(() => window.location.href = "index.html", 500);
+      } else {
+        toast(data.error || "Login failed");
+      }
+    })
+    .catch(() => toast("Network error. Is backend running?"))
+    .finally(() => setLoading("loginBtn", false, "Login"));
+  }
+
+  function signup() {
+    setLoading("signupBtn", true, "Creating...");
+    fetch(`${API_BASE}/signup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.value, password: password.value })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) toast("✅ Signup successful. Now login.");
+      else toast(data.error || "Signup failed");
+    })
+    .catch(() => toast("Network error. Is backend running?"))
+    .finally(() => setLoading("signupBtn", false, "Signup"));
+  }
+</script>
+
+</body>
+</html>
