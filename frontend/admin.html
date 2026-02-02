@@ -145,7 +145,7 @@
     .btnrow{ display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px; }
     .btn{
       flex: 1;
-      min-width: 130px;
+      min-width: 170px;
       padding: 10px 12px;
       border-radius: 14px;
       border: 1px solid rgba(255,255,255,.14);
@@ -165,10 +165,6 @@
     .btn.primary:hover{
       border-color: rgba(0,229,255,.45);
       background: linear-gradient(90deg, rgba(0,229,255,.30), rgba(42,27,255,.22));
-    }
-    .btn.danger{
-      border-color: rgba(255,43,214,.25);
-      background: linear-gradient(90deg, rgba(255,43,214,.16), rgba(255,255,255,.05));
     }
 
     .toast{
@@ -193,7 +189,7 @@
         <div class="logo"></div>
         <div>
           <div class="title">Instacatalog Dashboard</div>
-          <div class="sub">Approve → Publish (simulated) • per-user workspace</div>
+          <div class="sub">Self-posting mode • Submit → Post (simulated)</div>
         </div>
       </div>
 
@@ -206,9 +202,9 @@
 
     <div class="summary">
       <div class="card glow"><div class="metric"><div class="k">Total</div><div class="v" id="mTotal">0</div></div></div>
-      <div class="card"><div class="metric"><div class="k">Pending</div><div class="v" id="mPending">0</div></div></div>
-      <div class="card"><div class="metric"><div class="k">Approved</div><div class="v" id="mApproved">0</div></div></div>
+      <div class="card"><div class="metric"><div class="k">Ready</div><div class="v" id="mReady">0</div></div></div>
       <div class="card"><div class="metric"><div class="k">Posted</div><div class="v" id="mPosted">0</div></div></div>
+      <div class="card"><div class="metric"><div class="k">Other</div><div class="v" id="mOther">0</div></div></div>
     </div>
 
     <div class="toast" id="toast"></div>
@@ -245,14 +241,20 @@
 
   function setMetrics(posts){
     const total = posts.length;
-    const pending = posts.filter(p => p.status === "pending").length;
-    const approved = posts.filter(p => p.status === "approved").length;
+    const ready = posts.filter(p => p.status === "ready").length;
     const posted = posts.filter(p => p.status === "posted").length;
+    const other = posts.filter(p => p.status !== "ready" && p.status !== "posted").length;
 
     document.getElementById("mTotal").textContent = total;
-    document.getElementById("mPending").textContent = pending;
-    document.getElementById("mApproved").textContent = approved;
+    document.getElementById("mReady").textContent = ready;
     document.getElementById("mPosted").textContent = posted;
+    document.getElementById("mOther").textContent = other;
+  }
+
+  function prettyStatus(status){
+    if (status === "ready") return "Ready to Post";
+    if (status === "posted") return "Posted";
+    return status || "unknown";
   }
 
   function loadPosts() {
@@ -282,8 +284,11 @@
           const div = document.createElement("div");
           div.className = "card post";
 
-          const statusBadge = `<span class="badge">Status: <b>${escapeHtml(post.status)}</b></span>`;
+          const statusBadge = `<span class="badge">Status: <b>${escapeHtml(prettyStatus(post.status))}</b></span>`;
           const idBadge = `<span class="badge">ID: ${post.id}</span>`;
+
+          const canPost = post.status === "ready";
+          const postBtnText = canPost ? "Post to Instagram" : "Posted / Not Ready";
 
           div.innerHTML = `
             <h3>${escapeHtml(post.productName)}</h3>
@@ -293,9 +298,9 @@
             </div>
             <img src="${escapeHtml(post.imageUrl)}" alt="product image">
             <div class="btnrow">
-              <button class="btn primary" onclick="updateStatus(${post.id}, 'approved')">Approve</button>
-              <button class="btn danger" onclick="updateStatus(${post.id}, 'rejected')">Reject</button>
-              <button class="btn" onclick="publishPost(${post.id})">Post</button>
+              <button class="btn primary" onclick="publishPost(${post.id})" ${canPost ? "" : "disabled"}>
+                ${postBtnText}
+              </button>
             </div>
           `;
 
@@ -305,30 +310,6 @@
       .catch(err => {
         console.error(err);
         toast("Error loading posts. Check console.");
-      });
-  }
-
-  function updateStatus(id, status) {
-    fetch(`${API_BASE}/update-status`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "token": TOKEN
-      },
-      body: JSON.stringify({ id, status })
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (!data.success) {
-          toast(data.error || "Failed to update");
-          return;
-        }
-        toast(`✅ Updated: ${status}`);
-        loadPosts();
-      })
-      .catch(err => {
-        console.error(err);
-        toast("Error updating status. Check console.");
       });
   }
 
