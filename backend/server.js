@@ -10,13 +10,12 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send("Backend running clean (SQLite + Auth)");
+  res.send("Backend running clean (Self-posting mode)");
 });
 
 /**
  * Helper: get logged-in userId from request headers
- * We keep it simple for now:
- * - client sends header: token: "<userId>"
+ * Client sends header: token: "<userId>"
  */
 function requireUser(req, res) {
   const token = req.headers.token;
@@ -32,7 +31,11 @@ function requireUser(req, res) {
   return userId;
 }
 
-// ✅ SIGNUP
+/* ============================
+   AUTH
+============================ */
+
+// SIGNUP
 app.post("/signup", (req, res) => {
   const { email, password } = req.body;
 
@@ -53,12 +56,13 @@ app.post("/signup", (req, res) => {
 
   const info = db
     .prepare(`INSERT INTO users (email, passwordHash, createdAt) VALUES (?, ?, ?)`)
+
     .run(email, passwordHash, createdAt);
 
   res.json({ success: true, userId: info.lastInsertRowid });
 });
 
-// ✅ LOGIN
+// LOGIN
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
 
@@ -76,11 +80,15 @@ app.post("/login", (req, res) => {
     return res.status(401).json({ error: "Invalid credentials" });
   }
 
-  // Simple token for MVP: token = userId
+  // MVP token = userId
   res.json({ success: true, token: String(user.id), userId: user.id });
 });
 
-// ✅ CREATE POST (requires token)
+/* ============================
+   POSTS (SELF-POSTING)
+============================ */
+
+// CREATE POST → status = ready
 app.post("/post", (req, res) => {
   const userId = requireUser(req, res);
   if (!userId) return;
@@ -91,18 +99,17 @@ app.post("/post", (req, res) => {
     return res.status(400).json({ error: "Missing fields" });
   }
 
-  const stmt = db.prepare(`
-    INSERT INTO posts (userId, productName, imageUrl, caption, status, createdAt)
-    VALUES (?, ?, ?, ?, 'pending', ?)
-  `);
-
   const createdAt = new Date().toISOString();
-  const info = stmt.run(userId, productName, imageUrl, caption, createdAt);
+
+  const info = db.prepare(`
+    INSERT INTO posts (userId, productName, imageUrl, caption, status, createdAt)
+    VALUES (?, ?, ?, ?, 'ready', ?)
+  `).run(userId, productName, imageUrl, caption, createdAt);
 
   res.json({ success: true, id: info.lastInsertRowid });
 });
 
-// ✅ GET POSTS (requires token) — returns only the logged-in user’s posts
+// GET USER POSTS
 app.get("/posts", (req, res) => {
   const userId = requireUser(req, res);
   if (!userId) return;
@@ -114,50 +121,54 @@ app.get("/posts", (req, res) => {
   res.json(rows);
 });
 
-// ✅ UPDATE STATUS (requires token) — only updates posts belonging to that user
+// OPTIONAL STATUS UPDATE (kept safe, not required)
 app.post("/update-status", (req, res) => {
   const userId = requireUser(req, res);
   if (!userId) return;
 
   const { id, status } = req.body;
-
   if (!id || !status) {
     return res.status(400).json({ error: "Missing id or status" });
   }
 
-  const stmt = db.prepare(`UPDATE posts SET status = ? WHERE id = ? AND userId = ?`);
-  const info = stmt.run(status, id, userId);
+  const info = db
+    .prepare(`UPDATE posts SET status = ? WHERE id = ? AND userId = ?`)
+    .run(status, id, userId);
 
   if (info.changes === 0) {
-    return res.status(404).json({ error: "Post not found for this user" });
+    return res.status(404).json({ error: "Post not found" });
   }
 
   res.json({ success: true });
 });
 
-// ✅ PUBLISH (requires token) — only approved posts can be posted
+// PUBLISH → ready → posted
 app.post("/publish", (req, res) => {
   const userId = requireUser(req, res);
   if (!userId) return;
 
   const { id } = req.body;
-
   if (!id) {
     return res.status(400).json({ error: "Missing id" });
   }
 
-  const post = db.prepare(`SELECT * FROM posts WHERE id = ? AND userId = ?`).get(id, userId);
+  const post = db
+    .prepare(`SELECT * FROM posts WHERE id = ? AND userId = ?`)
+    .get(id, userId);
 
   if (!post) {
-    return res.status(404).json({ error: "Post not found for this user" });
+    return res.status(404).json({ error: "Post not found" });
   }
 
-  if (post.status !== "approved") {
-    return res.status(400).json({ error: "Post not approved yet" });
+  if (post.status !== "ready") {
+    return res.status(400).json({ error: "Post not ready yet" });
   }
 
-  // 🔮 FUTURE: Instagram Graph API call will happen here
-  db.prepare(`UPDATE posts SET status = 'posted' WHERE id = ? AND userId = ?`).run(id, userId);
+  // 🔮 NEXT STEP: Real Instagram Graph API call here
+  db.prepare(`
+    UPDATE posts SET status = 'posted'
+    WHERE id = ? AND userId = ?
+  `).run(id, userId);
 
   console.log("📸 Posted to Instagram (simulated):", post.productName);
 
@@ -165,5 +176,5 @@ app.post("/publish", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
