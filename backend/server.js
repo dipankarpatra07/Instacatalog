@@ -1,21 +1,43 @@
+// ✅ server.js (SELF-POSTING + JWT AUTH) — copy/paste full file (error-free)
+
 const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const db = require("./db");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// ✅ IMPORTANT: Set this in Render Environment Variables
+// Key: JWT_SECRET
+// Value: any long random string
+const JWT_SECRET = process.env.JWT_SECRET || "CHANGE_THIS_SECRET_IN_RENDER";
+
+// ✅ (Optional but recommended) lock CORS to your real frontend
+const allowedOrigins = [
+  "https://instacatalog.netlify.app",
+  "http://localhost:3000",
+  "http://localhost:5500"
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true); // allow Postman/curl
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error("CORS blocked: " + origin));
+  }
+}));
+
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send("Backend running clean (Self-posting mode)");
+  res.send("Backend running clean (Self-posting + JWT)");
 });
 
 /**
- * Helper: get logged-in userId from request headers
- * Client sends header: token: "<userId>"
+ * ✅ JWT Auth Helper
+ * Client sends header: token: "<JWT>"
  */
 function requireUser(req, res) {
   const token = req.headers.token;
@@ -23,19 +45,28 @@ function requireUser(req, res) {
     res.status(401).json({ error: "Not logged in (missing token header)" });
     return null;
   }
-  const userId = Number(token);
-  if (!Number.isInteger(userId) || userId <= 0) {
-    res.status(401).json({ error: "Invalid token" });
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const userId = Number(decoded.userId);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      res.status(401).json({ error: "Invalid token payload" });
+      return null;
+    }
+
+    return userId;
+  } catch (err) {
+    res.status(401).json({ error: "Token expired or invalid" });
     return null;
   }
-  return userId;
 }
 
 /* ============================
    AUTH
 ============================ */
 
-// SIGNUP
+// ✅ SIGNUP
 app.post("/signup", (req, res) => {
   const { email, password } = req.body;
 
@@ -56,13 +87,12 @@ app.post("/signup", (req, res) => {
 
   const info = db
     .prepare(`INSERT INTO users (email, passwordHash, createdAt) VALUES (?, ?, ?)`)
-
     .run(email, passwordHash, createdAt);
 
   res.json({ success: true, userId: info.lastInsertRowid });
 });
 
-// LOGIN
+// ✅ LOGIN (returns JWT)
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
 
@@ -80,15 +110,20 @@ app.post("/login", (req, res) => {
     return res.status(401).json({ error: "Invalid credentials" });
   }
 
-  // MVP token = userId
-  res.json({ success: true, token: String(user.id), userId: user.id });
+  const token = jwt.sign(
+    { userId: user.id },
+    JWT_SECRET,
+    { expiresIn: "30d" }
+  );
+
+  res.json({ success: true, token, userId: user.id });
 });
 
 /* ============================
    POSTS (SELF-POSTING)
 ============================ */
 
-// CREATE POST → status = ready
+// ✅ CREATE POST → status = ready
 app.post("/post", (req, res) => {
   const userId = requireUser(req, res);
   if (!userId) return;
@@ -109,7 +144,7 @@ app.post("/post", (req, res) => {
   res.json({ success: true, id: info.lastInsertRowid });
 });
 
-// GET USER POSTS
+// ✅ GET POSTS (only logged-in user's posts)
 app.get("/posts", (req, res) => {
   const userId = requireUser(req, res);
   if (!userId) return;
@@ -121,12 +156,13 @@ app.get("/posts", (req, res) => {
   res.json(rows);
 });
 
-// OPTIONAL STATUS UPDATE (kept safe, not required)
+// ✅ OPTIONAL: update-status (kept for compatibility; not needed in self-post mode)
 app.post("/update-status", (req, res) => {
   const userId = requireUser(req, res);
   if (!userId) return;
 
   const { id, status } = req.body;
+
   if (!id || !status) {
     return res.status(400).json({ error: "Missing id or status" });
   }
@@ -142,12 +178,13 @@ app.post("/update-status", (req, res) => {
   res.json({ success: true });
 });
 
-// PUBLISH → ready → posted
+// ✅ PUBLISH → ready → posted
 app.post("/publish", (req, res) => {
   const userId = requireUser(req, res);
   if (!userId) return;
 
   const { id } = req.body;
+
   if (!id) {
     return res.status(400).json({ error: "Missing id" });
   }
@@ -164,11 +201,10 @@ app.post("/publish", (req, res) => {
     return res.status(400).json({ error: "Post not ready yet" });
   }
 
-  // 🔮 NEXT STEP: Real Instagram Graph API call here
-  db.prepare(`
-    UPDATE posts SET status = 'posted'
-    WHERE id = ? AND userId = ?
-  `).run(id, userId);
+  // 🔮 NEXT STEP: Real Instagram Graph API call will happen here
+
+  db.prepare(`UPDATE posts SET status = 'posted' WHERE id = ? AND userId = ?`)
+    .run(id, userId);
 
   console.log("📸 Posted to Instagram (simulated):", post.productName);
 
