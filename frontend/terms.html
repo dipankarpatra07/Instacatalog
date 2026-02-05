@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gramixy • Terms of Service</title>
+  <style>
+    body{font-family:Arial,system-ui; margin:0; background:#0b1220; color:#fff;}
+    .wrap{max-width:900px; margin:0 auto; padding:32px 16px;}
+    a{color:#7de3ff}
+    .card{background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); border-radius:14px; padding:18px;}
+    h1,h2{margin:0 0 12px}
+    p,li{color:rgba(255,255,255,.85); line-height:1.6}
+    .muted{color:rgba(255,255,255,.65); font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Terms of Service</h1>
+      <p class="muted">Last updated: <span id="d"></span></p>
+
+      <p>By using Gramixy, you agree to these Terms.</p>
+
+      <h2>What Gramixy does</h2>
+      <p>Gramixy helps you create and publish product posts to your own Instagram account after you connect via Meta/Facebook authorization.</p>
+
+      <h2>Your responsibilities</h2>
+      <ul>
+        <li>You are responsible for the content you upload or publish.</li>
+        <li>You must have the rights to use the images and text you post.</li>
+        <li>You must follow Instagram/Meta platform policies.</li>
+      </ul>
+
+      <h2>Accounts & access</h2>
+      <p>You must keep your login credentials secure. You may disconnect Instagram at any time.</p>
+
+      <h2>Service availability</h2>
+      <p>We may update, change, or discontinue parts of the service at any time. We do not guarantee uninterrupted availability.</p>
+
+      <h2>Limitation of liability</h2>
+      <p>To the extent allowed by law, Gramixy is not liable for indirect or consequential damages. Use the service at your own risk.</p>
+
+      <h2>Contact</h2>
+      <p>Support: <b>support@gramixy.com</b> (replace with your real email if different).</p>
+
+      <p class="muted"><a href="index.html">Back to home</a></p>
+    </div>
+
+    <div style="margin-top:16px; text-align:center; font-size:12px; opacity:.7;">
+      © <span id="y"></span> Gramixy
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("d").textContent = new Date().toISOString().slice(0,10);
+    document.getElementById("y").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

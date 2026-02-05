@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gramixy • Privacy Policy</title>
+  <style>
+    body{font-family:Arial,system-ui; margin:0; background:#0b1220; color:#fff;}
+    .wrap{max-width:900px; margin:0 auto; padding:32px 16px;}
+    a{color:#7de3ff}
+    .card{background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); border-radius:14px; padding:18px;}
+    h1,h2{margin:0 0 12px}
+    p,li{color:rgba(255,255,255,.85); line-height:1.6}
+    .muted{color:rgba(255,255,255,.65); font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Privacy Policy</h1>
+      <p class="muted">Last updated: <span id="d"></span></p>
+
+      <p>Gramixy (“we”, “our”, “us”) provides a web app that helps users create and publish product posts to their own Instagram account after connecting via Meta/Facebook authorization.</p>
+
+      <h2>Information we collect</h2>
+      <ul>
+        <li><b>Account data:</b> email and password (stored securely as a hashed password).</li>
+        <li><b>Content you submit:</b> product name, image URL, caption.</li>
+        <li><b>Instagram connection data:</b> Instagram user/page IDs and access tokens provided by Meta during authorization (required for publishing).</li>
+        <li><b>Basic logs:</b> security and troubleshooting logs (e.g., request errors).</li>
+      </ul>
+
+      <h2>How we use information</h2>
+      <ul>
+        <li>To authenticate you and operate your account.</li>
+        <li>To publish content to Instagram at your request.</li>
+        <li>To improve reliability and prevent abuse.</li>
+      </ul>
+
+      <h2>Data sharing</h2>
+      <p>We do not sell your personal data. We share data only with Meta/Instagram APIs as needed to publish content and operate the service.</p>
+
+      <h2>Data retention</h2>
+      <p>We retain account and post data until you delete your account or request deletion. Tokens are stored to keep your Instagram connection working; you can disconnect anytime.</p>
+
+      <h2>Security</h2>
+      <p>We use reasonable security measures such as password hashing and access controls. No method of transmission is 100% secure.</p>
+
+      <h2>Your choices</h2>
+      <ul>
+        <li>You can log out anytime.</li>
+        <li>You can request deletion of your account and data.</li>
+      </ul>
+
+      <h2>Contact</h2>
+      <p>For privacy questions or data deletion requests, contact: <b>support@gramixy.com</b> (replace with your real email if different).</p>
+
+      <p class="muted"><a href="index.html">Back to home</a></p>
+    </div>
+
+    <div style="margin-top:16px; text-align:center; font-size:12px; opacity:.7;">
+      © <span id="y"></span> Gramixy
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("d").textContent = new Date().toISOString().slice(0,10);
+    document.getElementById("y").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
