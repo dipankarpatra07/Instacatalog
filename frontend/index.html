@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Instacatalog • Submit</title>
+  <title>Gramixy • Submit</title>
 
   <style>
     :root{
@@ -177,7 +177,7 @@
       <div class="brand">
         <div class="logo"></div>
         <div>
-          <div class="title">Instacatalog</div>
+          <div class="title">Gramixy</div>
           <div class="sub">Submit products • keep it clean • publish fast</div>
         </div>
       </div>
@@ -334,5 +334,9 @@
     .finally(() => setLoading(false));
   }
 </script>
+<div style="margin-top:20px; font-size:12px; opacity:.7;">
+  © <span id="y"></span> Gramixy
+</div>
+<script>document.getElementById("y").textContent = new Date().getFullYear();</script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Instacatalog • Dashboard</title>
+  <title>Gramixy • Dashboard</title>
 
   <style>
     :root{
@@ -188,7 +188,7 @@
       <div class="brand">
         <div class="logo"></div>
         <div>
-          <div class="title">Instacatalog Dashboard</div>
+          <div class="title">Gramixy Dashboard</div>
           <div class="sub">Self-posting mode • Submit → Post (simulated)</div>
         </div>
       </div>
@@ -339,5 +339,9 @@
 
   loadPosts();
 </script>
+<div style="margin-top:20px; font-size:12px; opacity:.7;">
+  © <span id="y"></span> Gramixy
+</div>
+<script>document.getElementById("y").textContent = new Date().getFullYear();</script>
 </body>
 </html>

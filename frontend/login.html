@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Instacatalog • Login</title>
+  <title>Gramixy • Login</title>
 
   <style>
     :root{
@@ -203,7 +203,7 @@
         <div class="brand">
           <div class="logo"></div>
           <div>
-            <div class="title">Instacatalog</div>
+            <div class="title">Gramixy</div>
             <div class="subtitle">Product → Approval → Publish pipeline</div>
           </div>
         </div>
@@ -284,6 +284,9 @@
     .finally(() => setLoading("signupBtn", false, "Signup"));
   }
 </script>
-
+<div style="margin-top:20px; font-size:12px; opacity:.7;">
+  © <span id="y"></span> Gramixy
+</div>
+<script>document.getElementById("y").textContent = new Date().getFullYear();</script>
 </body>
 </html>
