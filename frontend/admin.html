@@ -41,7 +41,7 @@
     }
     @keyframes drift{ from{transform:translate3d(0,0,0)} to{transform:translate3d(30px,18px,0)} }
 
-    .wrap{ padding: 24px 16px 40px; max-width: 1100px; margin: 0 auto; }
+    .wrap{ padding: 24px 16px 24px; max-width: 1100px; margin: 0 auto; }
 
     .topbar{
       display:flex; align-items:center; justify-content:space-between;
@@ -166,6 +166,10 @@
       border-color: rgba(0,229,255,.45);
       background: linear-gradient(90deg, rgba(0,229,255,.30), rgba(42,27,255,.22));
     }
+    .btn.danger{
+      border-color: rgba(255,43,214,.25);
+      background: linear-gradient(90deg, rgba(255,43,214,.16), rgba(255,255,255,.05));
+    }
 
     .toast{
       margin-top: 14px;
@@ -195,7 +199,7 @@
 
       <div class="actions">
         <a class="link" href="index.html">Submit</a>
-        <span class="link" onclick="loadPosts()">Refresh</span>
+        <span class="link" onclick="refreshAll()">Refresh</span>
         <span class="link" onclick="logout()">Logout</span>
       </div>
     </div>
@@ -205,6 +209,21 @@
       <div class="card"><div class="metric"><div class="k">Ready</div><div class="v" id="mReady">0</div></div></div>
       <div class="card"><div class="metric"><div class="k">Posted</div><div class="v" id="mPosted">0</div></div></div>
       <div class="card"><div class="metric"><div class="k">Other</div><div class="v" id="mOther">0</div></div></div>
+    </div>
+
+    <!-- ✅ NEW: Instagram connection card -->
+    <div class="card glow" style="margin-bottom:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div>
+          <div style="font-weight:800; font-size:15px;">Instagram Connection</div>
+          <div style="font-size:12px; opacity:.7;" id="igStatusText">Checking connection status...</div>
+        </div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn primary" onclick="connectInstagram()">Connect Instagram</button>
+          <button class="btn danger" onclick="disconnectInstagram()">Disconnect</button>
+        </div>
+      </div>
     </div>
 
     <div class="toast" id="toast"></div>
@@ -255,6 +274,44 @@
     if (status === "ready") return "Ready to Post";
     if (status === "posted") return "Posted";
     return status || "unknown";
+  }
+
+  function checkInstagramStatus() {
+    fetch(`${API_BASE}/ig/status`, { headers: { token: TOKEN } })
+      .then(res => res.json())
+      .then(data => {
+        const el = document.getElementById("igStatusText");
+        if (data.connected) el.textContent = "✅ Instagram Connected";
+        else el.textContent = "❌ Not Connected";
+      })
+      .catch(() => {
+        document.getElementById("igStatusText").textContent = "⚠ Unable to check status";
+      });
+  }
+
+  function connectInstagram() {
+    // NOTE: This will start working AFTER Meta app is created and approved.
+    window.location.href = `${API_BASE}/auth/instagram/start`;
+  }
+
+  function disconnectInstagram() {
+    fetch(`${API_BASE}/ig/disconnect`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        token: TOKEN
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (!data.success) {
+        toast("Failed to disconnect");
+        return;
+      }
+      toast("✅ Instagram disconnected");
+      checkInstagramStatus();
+    })
+    .catch(() => toast("Error disconnecting"));
   }
 
   function loadPosts() {
@@ -337,13 +394,21 @@
       });
   }
 
-  loadPosts();
+  function refreshAll(){
+    checkInstagramStatus();
+    loadPosts();
+  }
+
+  refreshAll();
 </script>
+
 <div style="margin-top:20px; font-size:12px; opacity:.7; text-align:center;">
-  © <span id="y"></span> Gramixy • 
-  <a href="privacy.html" style="color:#7de3ff;">Privacy</a> • 
-  <a href="terms.html" style="color:#7de3ff;">Terms</a>
+  © <span id="y"></span> Gramixy •
+  <a href="privacy.html" style="color:#7de3ff;">Privacy</a> •
+  <a href="terms.html" style="color:#7de3ff;">Terms</a> •
+  <a href="data-deletion.html" style="color:#7de3ff;">Data Deletion</a>
 </div>
 <script>document.getElementById("y").textContent = new Date().getFullYear();</script>
+
 </body>
 </html>
