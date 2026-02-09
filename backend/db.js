@@ -28,6 +28,21 @@ db.exec(`
   );
 `);
 
+// --- Instagram OAuth storage columns (safe migration) ---
+try { db.prepare(`ALTER TABLE users ADD COLUMN pageId TEXT`).run(); } catch(e) {}
+try { db.prepare(`ALTER TABLE users ADD COLUMN igUserId TEXT`).run(); } catch(e) {}
+try { db.prepare(`ALTER TABLE users ADD COLUMN igAccessToken TEXT`).run(); } catch(e) {}
+try { db.prepare(`ALTER TABLE users ADD COLUMN igTokenExpiresAt TEXT`).run(); } catch(e) {}
+
+// --- OAuth state table ---
+db.exec(`
+  CREATE TABLE IF NOT EXISTS ig_states (
+    state TEXT PRIMARY KEY,
+    userId INTEGER NOT NULL,
+    createdAt TEXT NOT NULL
+  );
+`);
+
 module.exports = db;
 
 
