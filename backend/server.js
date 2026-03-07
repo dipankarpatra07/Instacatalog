@@ -12,6 +12,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "CHANGE_THIS_SECRET_IN_RENDER";
 
 const allowedOrigins = [
   "https://gramixy.com",
+  "https://www.gramixy.com",
   "http://localhost:3000",
   "http://localhost:5500"
 ];
@@ -218,8 +219,20 @@ app.post("/ig/disconnect", (req, res) => {
 });
 
 app.get("/auth/instagram/start", (req, res) => {
-  const userId = requireUser(req, res);
-  if (!userId) return;
+  const token = req.query.token;
+
+  if (!token) {
+    return res.status(401).json({ error: "Not logged in" });
+  }
+
+  let decoded;
+  try {
+    decoded = jwt.verify(token, JWT_SECRET);
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
+
+  const userId = decoded.userId;
 
   let META_APP_ID, META_REDIRECT_URI;
   try {
@@ -232,7 +245,6 @@ app.get("/auth/instagram/start", (req, res) => {
   const state = crypto.randomBytes(16).toString("hex");
   saveIgState(state, userId);
 
-  // Using Facebook Login for Business / Instagram API with Facebook Login permissions
   const scope = [
     "pages_show_list",
     "pages_read_engagement",
@@ -270,7 +282,6 @@ app.get("/auth/instagram/callback", async (req, res) => {
     const META_REDIRECT_URI = getEnv("META_REDIRECT_URI");
     const FRONTEND_URL = process.env.FRONTEND_URL || "https://gramixy.com";
 
-    // Exchange code -> user access token
     const tokenRes = await fetch(
       `https://graph.facebook.com/v25.0/oauth/access_token` +
       `?client_id=${encodeURIComponent(META_APP_ID)}` +
@@ -286,7 +297,6 @@ app.get("/auth/instagram/callback", async (req, res) => {
 
     const accessToken = tokenData.access_token;
 
-    // Get pages available to the user
     const pagesRes = await fetch(
       `https://graph.facebook.com/v25.0/me/accounts?access_token=${encodeURIComponent(accessToken)}`
     );
@@ -299,7 +309,6 @@ app.get("/auth/instagram/callback", async (req, res) => {
     const page = pagesData.data[0];
     const pageId = page.id;
 
-    // Get IG business account linked to the page
     const igRes = await fetch(
       `https://graph.facebook.com/v25.0/${pageId}` +
       `?fields=instagram_business_account&access_token=${encodeURIComponent(accessToken)}`
@@ -393,7 +402,6 @@ app.post("/publish", async (req, res) => {
       return res.status(400).json({ error: "Instagram not connected" });
     }
 
-    // Step 1: create media container
     const creationId = await createInstagramMediaContainer({
       igUserId: user.igUserId,
       imageUrl: post.imageUrl,
@@ -401,7 +409,6 @@ app.post("/publish", async (req, res) => {
       accessToken: user.igAccessToken
     });
 
-    // Step 2: publish media container
     const mediaId = await publishInstagramMedia({
       igUserId: user.igUserId,
       creationId,
