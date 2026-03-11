@@ -90,9 +90,7 @@ async function createInstagramMediaContainer({ igUserId, imageUrl, caption, acce
 
   const response = await fetch(`https://graph.facebook.com/v25.0/${igUserId}/media`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body
   });
 
@@ -113,9 +111,7 @@ async function publishInstagramMedia({ igUserId, creationId, accessToken }) {
 
   const response = await fetch(`https://graph.facebook.com/v25.0/${igUserId}/media_publish`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body
   });
 
@@ -172,11 +168,7 @@ app.post("/login", (req, res) => {
     return res.status(401).json({ error: "Invalid credentials" });
   }
 
-  const token = jwt.sign(
-    { userId: user.id },
-    JWT_SECRET,
-    { expiresIn: "30d" }
-  );
+  const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "30d" });
 
   res.json({ success: true, token });
 });
@@ -219,48 +211,54 @@ app.post("/ig/disconnect", (req, res) => {
 });
 
 app.get("/auth/instagram/start", (req, res) => {
-  const token = req.query.token;
-
-  if (!token) {
-    return res.status(401).json({ error: "Not logged in" });
-  }
-
-  let decoded;
   try {
-    decoded = jwt.verify(token, JWT_SECRET);
+    const token = req.query.token;
+
+    if (!token) {
+      return res.status(401).json({ error: "Not logged in" });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
+    } catch (err) {
+      return res.status(401).json({ error: "Invalid token" });
+    }
+
+    const userId = decoded.userId;
+    const META_APP_ID = getEnv("META_APP_ID");
+    const META_REDIRECT_URI = getEnv("META_REDIRECT_URI");
+
+    // basic sanity check to catch wrong env values
+    if (!/^\d+$/.test(META_APP_ID)) {
+      return res.status(500).json({
+        error: "META_APP_ID is invalid. Use the main Meta App ID digits only."
+      });
+    }
+
+    const state = crypto.randomBytes(16).toString("hex");
+    saveIgState(state, userId);
+
+    const scope = [
+      "pages_show_list",
+      "pages_read_engagement",
+      "instagram_basic",
+      "instagram_content_publish"
+    ].join(",");
+
+    const authUrl =
+      `https://www.facebook.com/v25.0/dialog/oauth` +
+      `?client_id=${encodeURIComponent(META_APP_ID)}` +
+      `&redirect_uri=${encodeURIComponent(META_REDIRECT_URI)}` +
+      `&state=${encodeURIComponent(state)}` +
+      `&response_type=code` +
+      `&scope=${encodeURIComponent(scope)}`;
+
+    return res.redirect(authUrl);
   } catch (err) {
-    return res.status(401).json({ error: "Invalid token" });
+    console.error("OAuth start error:", err.message);
+    return res.status(500).json({ error: err.message });
   }
-
-  const userId = decoded.userId;
-
-  let META_APP_ID, META_REDIRECT_URI;
-  try {
-    META_APP_ID = getEnv("META_APP_ID");
-    META_REDIRECT_URI = getEnv("META_REDIRECT_URI");
-  } catch (e) {
-    return res.status(400).json({ error: e.message });
-  }
-
-  const state = crypto.randomBytes(16).toString("hex");
-  saveIgState(state, userId);
-
-  const scope = [
-    "pages_show_list",
-    "pages_read_engagement",
-    "instagram_basic",
-    "instagram_content_publish"
-  ].join(",");
-
-  const authUrl =
-    `https://www.facebook.com/v25.0/dialog/oauth` +
-    `?client_id=${encodeURIComponent(META_APP_ID)}` +
-    `&redirect_uri=${encodeURIComponent(META_REDIRECT_URI)}` +
-    `&state=${encodeURIComponent(state)}` +
-    `&response_type=code` +
-    `&scope=${encodeURIComponent(scope)}`;
-
-  res.redirect(authUrl);
 });
 
 app.get("/auth/instagram/callback", async (req, res) => {
@@ -289,6 +287,7 @@ app.get("/auth/instagram/callback", async (req, res) => {
       `&client_secret=${encodeURIComponent(META_APP_SECRET)}` +
       `&code=${encodeURIComponent(code)}`
     );
+
     const tokenData = await tokenRes.json();
 
     if (!tokenRes.ok || !tokenData.access_token) {
@@ -328,7 +327,7 @@ app.get("/auth/instagram/callback", async (req, res) => {
 
     return res.redirect(`${FRONTEND_URL}/admin.html?ig=connected`);
   } catch (err) {
-    console.error(err);
+    console.error("OAuth callback error:", err);
     return res.status(500).send(`Callback error: ${err.message}`);
   }
 });
@@ -427,7 +426,7 @@ app.post("/publish", async (req, res) => {
       mediaId
     });
   } catch (err) {
-    console.error(err);
+    console.error("Publish error:", err);
     return res.status(500).json({
       error: err.message || "Instagram publish failed"
     });
