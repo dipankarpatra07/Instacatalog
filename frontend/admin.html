@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <link rel="icon" sizes="32x32" href="/favicon.png">
+  <link rel="icon" sizes="16x16" href="/favicon-16x16.png">
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Gramixy • Dashboard</title>
@@ -193,7 +195,7 @@
         <div class="logo"></div>
         <div>
           <div class="title">Gramixy Dashboard</div>
-          <div class="sub">Self-posting mode • Submit → Post (simulated)</div>
+          <div class="sub">Self-posting mode • Submit → Post</div>
         </div>
       </div>
 
@@ -211,7 +213,6 @@
       <div class="card"><div class="metric"><div class="k">Other</div><div class="v" id="mOther">0</div></div></div>
     </div>
 
-    <!-- ✅ NEW: Instagram connection card -->
     <div class="card glow" style="margin-bottom:16px;">
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
         <div>
@@ -249,7 +250,7 @@
     toastEl.style.display = "block";
     toastEl.textContent = msg;
     clearTimeout(window.__t);
-    window.__t = setTimeout(()=> toastEl.style.display = "none", 2200);
+    window.__t = setTimeout(()=> toastEl.style.display = "none", 2500);
   }
 
   function escapeHtml(str) {
@@ -290,8 +291,13 @@
   }
 
   function connectInstagram() {
-    // NOTE: This will start working AFTER Meta app is created and approved.
-    window.location.href = `${API_BASE}/auth/instagram/start`;
+    if (!TOKEN) {
+      alert("Please login first");
+      window.location.href = "login.html";
+      return;
+    }
+
+    window.location.href = `${API_BASE}/auth/instagram/start?token=${encodeURIComponent(TOKEN)}`;
   }
 
   function disconnectInstagram() {
@@ -385,7 +391,7 @@
           toast(data.error || "Failed to publish");
           return;
         }
-        toast("📸 Posted (simulated)!");
+        toast("📸 Posted to Instagram!");
         loadPosts();
       })
       .catch(err => {
