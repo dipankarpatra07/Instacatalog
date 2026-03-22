@@ -60,7 +60,7 @@ function getEnv(name) {
   if (!value || value === "TEMP") {
     throw new Error(`Missing env var: ${name}`);
   }
-  return value;
+  return String(value).trim();
 }
 
 function saveIgState(state, userId) {
@@ -90,7 +90,9 @@ async function createInstagramMediaContainer({ igUserId, imageUrl, caption, acce
 
   const response = await fetch(`https://graph.facebook.com/v25.0/${igUserId}/media`, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
     body
   });
 
@@ -111,7 +113,9 @@ async function publishInstagramMedia({ igUserId, creationId, accessToken }) {
 
   const response = await fetch(`https://graph.facebook.com/v25.0/${igUserId}/media_publish`, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
     body
   });
 
@@ -168,7 +172,11 @@ app.post("/login", (req, res) => {
     return res.status(401).json({ error: "Invalid credentials" });
   }
 
-  const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "30d" });
+  const token = jwt.sign(
+    { userId: user.id },
+    JWT_SECRET,
+    { expiresIn: "30d" }
+  );
 
   res.json({ success: true, token });
 });
@@ -229,7 +237,6 @@ app.get("/auth/instagram/start", (req, res) => {
     const META_APP_ID = getEnv("META_APP_ID");
     const META_REDIRECT_URI = getEnv("META_REDIRECT_URI");
 
-    // basic sanity check to catch wrong env values
     if (!/^\d+$/.test(META_APP_ID)) {
       return res.status(500).json({
         error: "META_APP_ID is invalid. Use the main Meta App ID digits only."
@@ -278,7 +285,11 @@ app.get("/auth/instagram/callback", async (req, res) => {
     const META_APP_ID = getEnv("META_APP_ID");
     const META_APP_SECRET = getEnv("META_APP_SECRET");
     const META_REDIRECT_URI = getEnv("META_REDIRECT_URI");
-    const FRONTEND_URL = process.env.FRONTEND_URL || "https://gramixy.com";
+    const FRONTEND_URL = getEnv("FRONTEND_URL");
+
+    if (!/^\d+$/.test(META_APP_ID)) {
+      return res.status(500).send("META_APP_ID is invalid. Use the main Meta App ID digits only.");
+    }
 
     const tokenRes = await fetch(
       `https://graph.facebook.com/v25.0/oauth/access_token` +
