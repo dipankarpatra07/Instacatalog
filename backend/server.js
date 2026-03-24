@@ -3,12 +3,17 @@ const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const OpenAI = require("openai");
 const db = require("./db");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 const JWT_SECRET = process.env.JWT_SECRET || "CHANGE_THIS_SECRET_IN_RENDER";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
 
 const allowedOrigins = [
   "https://gramixy.com",
@@ -28,7 +33,7 @@ app.use(cors({
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send("Backend running clean (JWT + Instagram OAuth + Real Publish)");
+  res.send("Backend running clean (Gramixy + Chatbot)");
 });
 
 /* ============================
@@ -340,6 +345,61 @@ app.get("/auth/instagram/callback", async (req, res) => {
   } catch (err) {
     console.error("OAuth callback error:", err);
     return res.status(500).send(`Callback error: ${err.message}`);
+  }
+});
+
+/* ============================
+   AI CHATBOT
+============================ */
+
+app.post("/chat", async (req, res) => {
+  try {
+    const { message } = req.body;
+
+    if (!message || !String(message).trim()) {
+      return res.status(400).json({ error: "Message is required" });
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({ error: "OpenAI API key is missing on server" });
+    }
+
+    const response = await openai.responses.create({
+      model: "gpt-5.4",
+      input: [
+        {
+          role: "system",
+          content: `
+You are Gramixy AI Assistant.
+You help users with:
+- Instagram connection help
+- product caption writing
+- hashtag suggestions
+- support for Gramixy dashboard
+- publishing guidance
+
+Rules:
+- Keep replies clear and short
+- Be helpful for beginners
+- If asked for captions, provide a ready-to-use Instagram caption
+- If asked for hashtags, provide around 10 relevant hashtags
+- If asked about technical issues, explain step by step
+          `.trim()
+        },
+        {
+          role: "user",
+          content: String(message).trim()
+        }
+      ]
+    });
+
+    const reply = response.output_text || "Sorry, I could not generate a reply right now.";
+    return res.json({ success: true, reply });
+  } catch (err) {
+    console.error("Chat error:", err);
+    return res.status(500).json({
+      error: "Chatbot failed. Please try again."
+    });
   }
 });
 
